@@ -1,0 +1,85 @@
+#!/usr/bin/env node
+
+/**
+ * Підтягування залежностей
+ */
+var debug = require('debug')('crudetor:server');
+var http = require('http');
+var app = require('../app'); // <- підтягнули нашу app
+
+/**
+ * Зчитуємо порт із процесу або дефолтний (3000)
+ */
+var port = normalizePort(process.env.PORT || '3000');
+app.set('port', port);
+
+/**
+ * Створюємо HTTP-сервер на базі app
+ */
+var server = http.createServer(app);
+
+/**
+ * Запускаємо прослуховування
+ */
+server.listen(port, () => {
+  console.log(`Server running on port ${port}`);
+});
+server.on('error', onError);
+server.on('listening', onListening);
+
+/**
+ * Функція для нормалізації порту (число, стрічка чи false)
+ */
+function normalizePort(val) {
+  var port = parseInt(val, 10);
+
+  if (isNaN(port)) {
+    // named pipe
+    return val;
+  }
+
+  if (port >= 0) {
+    // port number
+    return port;
+  }
+
+  return false;
+}
+
+/**
+ * Обробник помилки при старті або роботі сервера
+ */
+function onError(error) {
+  if (error.syscall !== 'listen') {
+    throw error;
+  }
+
+  var bind = typeof port === 'string'
+      ? 'Pipe ' + port
+      : 'Port ' + port;
+
+  // friendly messages
+  switch (error.code) {
+    case 'EACCES':
+      console.error(`${bind} requires elevated privileges`);
+      process.exit(1);
+      break;
+    case 'EADDRINUSE':
+      console.error(`${bind} is already in use`);
+      process.exit(1);
+      break;
+    default:
+      throw error;
+  }
+}
+
+/**
+ * Івент, коли сервер почав слухати
+ */
+function onListening() {
+  var addr = server.address();
+  var bind = typeof addr === 'string'
+      ? `pipe ${addr}`
+      : `port ${addr.port}`;
+  debug(`Listening on ${bind}`);
+}
